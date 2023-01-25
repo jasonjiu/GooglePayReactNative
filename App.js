@@ -1,4 +1,6 @@
 import React, {Component} from 'react';
+import {ApplePay} from 'react-native-apay';
+
 import {
   StyleSheet,
   Text,
@@ -36,6 +38,19 @@ const requestData: RequestDataType = {
     currencyCode: 'RUB',
   },
   merchantName: 'Example Merchant',
+};
+
+const requestDataApplePay = {
+  merchantIdentifier: 'merchant.com.example',
+  supportedNetworks: ['mastercard', 'visa'],
+  countryCode: 'SG',
+  currencyCode: 'SGD',
+  paymentSummaryItems: [
+    {
+      label: 'Item label',
+      amount: '100.00',
+    },
+  ],
 };
 
 const stripeRequestData: RequestDataType = {
@@ -96,6 +111,22 @@ export default class App extends Component {
     );
   };
 
+  payWithApplePay = () => {
+    if (ApplePay.canMakePayments) {
+      ApplePay.requestPayment(requestDataApplePay).then(paymentData => {
+        console.log(paymentData);
+        // Simulate a request to the gateway
+        setTimeout(() => {
+          // Show status to user ApplePay.SUCCESS || ApplePay.FAILURE
+          ApplePay.complete(ApplePay.SUCCESS).then(() => {
+            console.log('completed');
+            // do something
+          });
+        }, 1000);
+      });
+    }
+  };
+
   handleSuccess = (token: string) => {
     // Send a token to your payment gateway
     Alert.alert('Success', `token: ${token}`);
@@ -108,13 +139,23 @@ export default class App extends Component {
     return (
       <View style={styles.container}>
         <Text style={styles.welcome}>Welcome to react-native-google-pay!</Text>
-        <TouchableOpacity style={styles.button} onPress={this.payWithGooglePay}>
+        <TouchableOpacity
+          style={[styles.button, Platform.OS === 'ios' ? styles.hidden : {}]}
+          onPress={this.payWithGooglePay}>
           <Text style={styles.buttonText}>Buy with Google Pay</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.stripe]}
           onPress={this.payWithStripeGooglePay}>
           <Text style={styles.buttonText}>Buy with Stripe Google Pay</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            Platform.OS === 'android' ? styles.hidden : {},
+          ]}
+          onPress={this.payWithApplePay}>
+          <Text style={styles.buttonText}>Buy with Apple Pay</Text>
         </TouchableOpacity>
       </View>
     );
@@ -147,5 +188,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#ffffff',
     fontSize: 18,
+  },
+  hidden: {
+    width: 0,
+    height: 0,
   },
 });
